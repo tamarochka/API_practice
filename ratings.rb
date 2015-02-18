@@ -11,8 +11,9 @@ class OMDbApi
   result = JSON.parse(Net::HTTP.get(URI.parse(URI.escape(query))))
 end
 
-def self.errors?(movie)
-  false
+def self.no_errors?(movie)
+  result = connect_api(movie)
+  result["response"] != "error"
 end
 
 def self.movie_rating(movie)
@@ -31,14 +32,22 @@ def read_file_from(filename)
 end
 
 movies_with_ratings = []
-read_file_from("movies.csv").each do |movie|
-  if OMDbApi.errors?(movie)
-    puts "something went wrong"
-  else movie["rating"] = OMDbApi.movie_rating(movie)
+
+SLEEP_WINDOW = 60 * 1 # minutes
+read_file_from("movies.csv").each_slice(10) do |chunk| #slicing an array to limit 10requests at a time
+  start_time = Time.now
+  chunk.each do |movie|
+    if OMDbApi.no_errors?(movie)
+      movie["rating"] = OMDbApi.movie_rating(movie).to_f
+    else
+      movie["rating"]= 0
+    end
     movies_with_ratings << movie
   end
+  sleep_time = SLEEP_WINDOW - (Time.now - start_time)
+  sleep sleep_time if (sleep_time > 0)
 end
 
 movies_with_ratings.sort_by{|k| k["rating"]}.each do |movie|
-  puts "Title: #{movie["title"]} Year: #{movie["rating"]}"
+  puts "Title: #{movie["title"]} Rating: #{movie["rating"]}"
 end
