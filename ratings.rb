@@ -39,6 +39,6 @@ read_file_from("movies.csv").each do |movie|
   end
 end
 
-movies_with_ratings.each do |movie|
+movies_with_ratings.sort_by{|k| k["rating"]}.each do |movie|
   puts "Title: #{movie["title"]} Year: #{movie["rating"]}"
 end
