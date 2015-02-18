@@ -34,7 +34,7 @@ end
 movies_with_ratings = []
 
 SLEEP_WINDOW = 60 * 1 # minutes
-read_file_from("movies.csv").each_slice(10) do |chunk| #slicing an array to limit 10requests at a time
+read_file_from("movies.csv").each_slice(10) do |chunk| #slicing an array to limit 10requests per miniute
   start_time = Time.now
   chunk.each do |movie|
     if OMDbApi.no_errors?(movie)
@@ -47,7 +47,7 @@ read_file_from("movies.csv").each_slice(10) do |chunk| #slicing an array to limi
   sleep_time = SLEEP_WINDOW - (Time.now - start_time)
   sleep sleep_time if (sleep_time > 0)
 end
-
-movies_with_ratings.sort_by{|k| k["rating"]}.each do |movie|
+sorted_movies = movies_with_ratings.sort_by{|k| k["rating"]}.reverse
+sorted_movies.each do |movie|
   puts "Title: #{movie["title"]} Rating: #{movie["rating"]}"
 end
